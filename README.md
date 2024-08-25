@@ -22,7 +22,7 @@ SnapWire is a lightweight dependency injection (DI) framework for Java applicati
 
 1. Clone the repository:
     ```sh
-    git clone https://github.com/yourusername/snapwire.git
+    git clone git@github.com:marinus-g/snapwire.git
     cd snapwire
     ```
 

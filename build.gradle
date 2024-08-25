@@ -1,0 +1,43 @@
+plugins {
+    id 'java'
+    id("io.freefair.lombok") version "8.10"
+    id("com.github.johnrengelman.shadow") version "8.1.1"
+}
+
+apply {
+    plugin 'com.github.johnrengelman.shadow'
+}
+group = 'dev.marinus'
+version = '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compileOnly('org.jetbrains:annotations:13.0')
+    implementation 'org.reflections:reflections:0.10.2'
+
+    testImplementation platform('org.junit:junit-bom:5.10.0')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testImplementation 'org.hamcrest:hamcrest:3.0'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+configurations {
+    runtime {
+        transitive = false
+    }
+}
+
+shadowJar {
+
+  //  configurations = [project.configurations.runtime]
+  //  mergeServiceFiles()
+    manifest {
+        attributes 'Main-Class': 'test.Main'
+    }
+}

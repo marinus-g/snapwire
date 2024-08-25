@@ -1,8 +1,8 @@
-# SnapWire Dependency Injection Framework
+# SnapWire Dependency Injection Library
 
 ## Overview
 
-SnapWire is a lightweight dependency injection (DI) framework for Java applications. It provides a simple and efficient way to manage dependencies and lifecycle of beans in your application.
+SnapWire is a lightweight dependency injection (DI) Library for Java applications. It provides a simple and efficient way to manage dependencies and lifecycle of beans in your application.
 
 ## Features
 

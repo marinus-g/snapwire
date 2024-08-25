@@ -59,7 +59,7 @@ public class BeanContextInitializer {
     }
 
     private boolean isInitialized(BeanDetails details) {
-        return details.getStage() == BeanDetails.Stage.INITIALIZED;
+        return details.getStage() == BeanDetails.Stage.PRE_INITIALIZED;
     }
 
     private void queryDependencies(BeanDetails details) {

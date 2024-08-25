@@ -46,11 +46,25 @@ public class SnapWire {
 
     }
 
+    public void onPreEnable(SnapWired snapWired, @Nullable BeanContext context) {
+        if (context == null) {
+            context = this.rootContext;
+        }
+        context.onPreEnable(snapWired);
+
+    }
+
+    public void onDisable(SnapWired snapWired, @Nullable BeanContext context) {
+        if (context == null) {
+            context = this.rootContext;
+        }
+        context.onDisable(snapWired);
+    }
+
     public void onEnable(SnapWired snapWired, @Nullable BeanContext context) {
         if (context == null) {
             context = this.rootContext;
         }
         context.onEnable(snapWired);
-
     }
 }

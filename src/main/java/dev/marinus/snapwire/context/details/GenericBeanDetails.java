@@ -2,7 +2,6 @@ package dev.marinus.snapwire.context.details;
 
 import dev.marinus.snapwire.DisposableBean;
 import dev.marinus.snapwire.SnapWired;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collections;
@@ -69,7 +68,7 @@ public class GenericBeanDetails implements BeanDetails {
     @Override
     public void setBean(@Nullable Object bean) {
         this.instance = bean;
-        this.stage = bean == null ? Stage.DESTROYED : Stage.INITIALIZED;
+        this.stage = bean == null ? Stage.DESTROYED : Stage.PRE_INITIALIZED;
 
     }
 
@@ -106,6 +105,11 @@ public class GenericBeanDetails implements BeanDetails {
     @Override
     public Stage getStage() {
         return this.stage;
+    }
+
+    @Override
+    public void setStage(Stage stage) {
+        this.stage = stage;
     }
 
     @Override

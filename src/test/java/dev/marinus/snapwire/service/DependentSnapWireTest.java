@@ -1,7 +1,6 @@
 package dev.marinus.snapwire.service;
 
 import dev.marinus.snapwire.SnapWire;
-import dev.marinus.snapwire.SnapWired;
 import dev.marinus.snapwire.context.BeanContext;
 import dev.marinus.snapwire.service.test2.Test2Parent;
 import dev.marinus.snapwire.service.test2.service.Service1;
@@ -29,7 +28,7 @@ class DependentSnapWireTest {
     void testDependentService() {
         Test2Parent parent = new Test2Parent();
         parent.register();
-        parent.enableBeans();
+        parent.preEnableBeans();
         BeanContext context = SnapWire.getInstance().getRootContext();
         assertThat(context.getRegisteredBeans(), Matchers.hasSize(3));
         assertThat(context.getBean(Service1.class), Matchers.notNullValue());

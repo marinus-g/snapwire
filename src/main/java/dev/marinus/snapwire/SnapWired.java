@@ -12,6 +12,12 @@ public interface SnapWired {
         Thread.currentThread().setContextClassLoader(originalContextClassLoader);
     }
 
+    default void preEnableBeans() {
+        SnapWire snapWire = SnapWire.getInstance();
+        final Class<? extends SnapWired> clazz = this.getClass();
+        snapWire.onPreEnable(this, null);
+    }
+
     default void enableBeans() {
         SnapWire snapWire = SnapWire.getInstance();
         final Class<? extends SnapWired> clazz = this.getClass();
@@ -21,6 +27,13 @@ public interface SnapWired {
     default void disableBeans() {
         SnapWire snapWire = SnapWire.getInstance();
         final Class<? extends SnapWired> clazz = this.getClass();
+        snapWire.onDisable(this, null);
+    }
+
+    default void unregister() {
+        SnapWire snapWire = SnapWire.getInstance();
+        final Class<? extends SnapWired> clazz = this.getClass();
+        snapWire.unregister(clazz, true);
     }
 
     default ClassLoader getClassLoader() {

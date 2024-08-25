@@ -1,5 +1,6 @@
 package dev.marinus.snapwire.context;
 
+import dev.marinus.snapwire.DisposableBean;
 import dev.marinus.snapwire.SnapWired;
 import dev.marinus.snapwire.annotation.Bean;
 import dev.marinus.snapwire.annotation.Component;
@@ -219,8 +220,8 @@ public class BeanContext {
         return this.cachedComponentHolders.getOrDefault(clazz, genericComponentHolder);
     }
 
-    public void onEnable(SnapWired snapWired) {
-        for (BeanDetails sortedBean : getSortedBeans(snapWired, BeanDetails.Stage.INITIALIZED)) {
+    public void onPreEnable(SnapWired snapWired) {
+        for (BeanDetails sortedBean : getSortedBeans(snapWired, BeanDetails.Stage.PRE_INITIALIZED)) {
             System.out.println("Enabling bean " + sortedBean.getName());
             if (sortedBean instanceof ComponentTypeBeanDetails) {
                 System.out.println("Enabling component " + sortedBean.getName());
@@ -230,6 +231,55 @@ public class BeanContext {
                 System.out.println("component holder onEnable for " + componentHolder);
                 componentHolder.onEnable(sortedBean.getBean());
             }
+            if (sortedBean instanceof TypeBeanDetails) {
+                // TODO @PreEnable
+            }
+            sortedBean.setStage(BeanDetails.Stage.INITIALIZED);
+        }
+    }
+
+    public void onEnable(SnapWired snapWired) {
+        for (BeanDetails sortedBean : getSortedBeans(snapWired, BeanDetails.Stage.PRE_INITIALIZED)) {
+            System.out.println("Enabling bean " + sortedBean.getName());
+            if (sortedBean instanceof ComponentTypeBeanDetails) {
+                System.out.println("Enabling component " + sortedBean.getName());
+                ComponentTypeBeanDetails componentTypeBeanDetails = (ComponentTypeBeanDetails) sortedBean;
+                System.out.println("component onEnable for " + sortedBean);
+                AbstractComponentHolder<Object> componentHolder = (AbstractComponentHolder<Object>) componentTypeBeanDetails.getComponentHolder();
+                System.out.println("component holder onEnable for " + componentHolder);
+                componentHolder.onEnable(sortedBean.getBean());
+            }
+            if (sortedBean instanceof TypeBeanDetails) {
+                // TODO @PreEnable
+            }
+        }
+    }
+
+    public void onDisable(SnapWired snapWired) {
+        List<BeanDetails> sorted = getSortedBeans(snapWired, BeanDetails.Stage.INITIALIZED);
+        Collections.reverse(sorted);
+        for (BeanDetails sortedBean : sorted) {
+            System.out.println("Disabling bean " + sortedBean.getName());
+            if (sortedBean instanceof TypeBeanDetails) {
+                // TODO @PreDestroy
+            }
+            if (sortedBean instanceof ComponentTypeBeanDetails) {
+                System.out.println("Disabling component " + sortedBean.getName());
+                ComponentTypeBeanDetails componentTypeBeanDetails = (ComponentTypeBeanDetails) sortedBean;
+                System.out.println("component onDisable for " + sortedBean);
+                AbstractComponentHolder<Object> componentHolder = (AbstractComponentHolder<Object>) componentTypeBeanDetails.getComponentHolder();
+                System.out.println("component holder onDisable for " + componentHolder);
+                componentHolder.onDisable(sortedBean.getBean());
+            }
+            if (sortedBean.getBean() instanceof DisposableBean) {
+                DisposableBean disposableBean = (DisposableBean) sortedBean.getBean();
+                try {
+                    disposableBean.destroy();
+                } catch (Exception e) {
+                    log.error("Failed to destroy bean {}", sortedBean.getBean(), e);
+                }
+            }
+            sortedBean.setStage(BeanDetails.Stage.PRE_DESTROYED);
         }
     }
 }

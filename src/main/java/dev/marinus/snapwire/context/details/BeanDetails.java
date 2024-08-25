@@ -1,8 +1,6 @@
 package dev.marinus.snapwire.context.details;
 
 import dev.marinus.snapwire.SnapWired;
-import dev.marinus.snapwire.context.BeanContext;
-import dev.marinus.snapwire.context.BeanContextInitializer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -37,6 +35,8 @@ public interface BeanDetails {
 
     Stage getStage();
 
+    void setStage(Stage stage);
+
     boolean hasDependencies();
 
     boolean hasChildren();
@@ -44,8 +44,8 @@ public interface BeanDetails {
 
     enum Stage {
         CREATED,
+        PRE_INITIALIZED,
         INITIALIZED,
-        POST_INITIALIZED,
         PRE_DESTROYED,
         DESTROYED
     }

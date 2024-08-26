@@ -292,12 +292,10 @@ public class BeanContext {
         if (bean instanceof TypeBeanDetails) {
             TypeBeanDetails typeBeanDetails = (TypeBeanDetails) bean;
             List<MethodBeanDetails> methodDetails = typeBeanDetails.getMethodDetails(BeanDetails.Stage.PRE_INITIALIZED);
-            if (methodDetails == null) {
-              return;
+            if (methodDetails != null) {
+                methodDetails.forEach(methodBeanDetails
+                        -> methodBeanDetails.getMethodParameterDetails().invoke(methodBeanDetails.getHolder().getBean(), this));
             }
-            methodDetails.forEach(methodBeanDetails -> {
-                methodBeanDetails.getMethodParameterDetails().invoke(methodBeanDetails.getHolder().getBean(), this);
-            });
         }
         bean.setStage(BeanDetails.Stage.PRE_ENABLE_CALLED);
     }
@@ -312,12 +310,11 @@ public class BeanContext {
             if (sortedBean instanceof TypeBeanDetails) {
                 TypeBeanDetails typeBeanDetails = (TypeBeanDetails) sortedBean;
                 List<MethodBeanDetails> methodDetails = typeBeanDetails.getMethodDetails(BeanDetails.Stage.PRE_ENABLE_CALLED);
-                if (methodDetails == null) {
-                    continue;
+
+                if (methodDetails != null) {
+                    methodDetails.forEach(methodBeanDetails
+                            -> methodBeanDetails.getMethodParameterDetails().invoke(methodBeanDetails.getHolder().getBean(), this));
                 }
-                methodDetails.forEach(methodBeanDetails -> {
-                    methodBeanDetails.getMethodParameterDetails().invoke(methodBeanDetails.getHolder().getBean(), this);
-                });
             }
             sortedBean.setStage(BeanDetails.Stage.INITIALIZED);
         }
@@ -354,8 +351,8 @@ public class BeanContext {
                         -> methodBeanDetails.getMethodParameterDetails().invoke(methodBeanDetails.getHolder().getBean(),
                         this));
             }
-            if (danglingTypeBean instanceof DisposableBean) {
-                DisposableBean disposableBean = (DisposableBean) danglingTypeBean;
+            if (danglingTypeBean.getBean() instanceof DisposableBean) {
+                DisposableBean disposableBean = (DisposableBean) danglingTypeBean.getBean();
                 try {
                     disposableBean.destroy();
                 } catch (Exception e) {

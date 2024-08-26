@@ -28,7 +28,7 @@ class ComponentSnapWireTest {
     void testSimpleComponent() {
         Component1Parent parent = new Component1Parent();
         parent.register();
-        parent.preEnableBeans();
+        parent.enableBeans();
         BeanContext context = SnapWire.getInstance().getRootContext();
         assertThat(context.getRegisteredBeans(), Matchers.hasSize(5));
     }
@@ -37,7 +37,7 @@ class ComponentSnapWireTest {
     void testComponentHolder() {
         Component2Parent parent = new Component2Parent();
         parent.register();
-        parent.preEnableBeans();
+        parent.enableBeans();
         BeanContext context = SnapWire.getInstance().getRootContext();
         ExampleComponent exampleInterface = context.getBean(ExampleComponent.class);
         assertThat(exampleInterface.getComponentName(), Matchers.equalTo("ExampleComponent"));

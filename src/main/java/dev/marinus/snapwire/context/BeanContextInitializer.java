@@ -53,6 +53,7 @@ public class BeanContextInitializer {
             Object bean = methodBeanDetails.getMethodParameterDetails().invoke(methodBeanDetails.getHolder().getBean(), beanContext);
             details.setBean(bean);
         }
+        beanContext.onPreEnable(details);
     }
 
     private boolean isInitialized(BeanDetails details) {

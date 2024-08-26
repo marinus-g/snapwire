@@ -133,6 +133,8 @@ public class BeanContext {
                 if (beanDetails == null) {
                     throw new IllegalArgumentException("Failed to register bean");
                 }
+                TypeBeanLoader typeBeanLoader = new TypeBeanLoader(beanDetails, this);
+                typeBeanLoader.load();
                 this.registerBeanDetails(beanDetails);
                 beanDetails.setConstructorDetails(new ConstructorBeanParameterDetails(beanClazz, this));
                 beanDetails.setParent(parent);
@@ -281,55 +283,88 @@ public class BeanContext {
         return this.cachedComponentHolders.getOrDefault(clazz, genericComponentHolder);
     }
 
-    public void onPreEnable(SnapWired snapWired) {
-        for (BeanDetails sortedBean : getSortedBeans(snapWired, BeanDetails.Stage.PRE_INITIALIZED)) {
-            if (sortedBean instanceof ComponentTypeBeanDetails) {
-                ComponentTypeBeanDetails componentTypeBeanDetails = (ComponentTypeBeanDetails) sortedBean;
-                AbstractComponentHolder<Object> componentHolder = (AbstractComponentHolder<Object>) componentTypeBeanDetails.getComponentHolder();
-                componentHolder.onEnable(sortedBean.getBean());
-            }
-            if (sortedBean instanceof TypeBeanDetails) {
-                // TODO @PreEnable
-            }
-            sortedBean.setStage(BeanDetails.Stage.INITIALIZED);
+    public void onPreEnable(BeanDetails bean) {
+        if (bean instanceof ComponentTypeBeanDetails) {
+            ComponentTypeBeanDetails componentTypeBeanDetails = (ComponentTypeBeanDetails) bean;
+            AbstractComponentHolder<Object> componentHolder = (AbstractComponentHolder<Object>) componentTypeBeanDetails.getComponentHolder();
+            componentHolder.onEnable(bean.getBean());
         }
+        if (bean instanceof TypeBeanDetails) {
+            TypeBeanDetails typeBeanDetails = (TypeBeanDetails) bean;
+            List<MethodBeanDetails> methodDetails = typeBeanDetails.getMethodDetails(BeanDetails.Stage.PRE_INITIALIZED);
+            if (methodDetails != null) {
+                methodDetails.forEach(methodBeanDetails
+                        -> methodBeanDetails.getMethodParameterDetails().invoke(methodBeanDetails.getHolder().getBean(), this));
+            }
+        }
+        bean.setStage(BeanDetails.Stage.PRE_ENABLE_CALLED);
     }
 
     public void onEnable(SnapWired snapWired) {
-        for (BeanDetails sortedBean : getSortedBeans(snapWired, BeanDetails.Stage.PRE_INITIALIZED)) {
+        for (BeanDetails sortedBean : getSortedBeans(snapWired, BeanDetails.Stage.PRE_ENABLE_CALLED)) {
             if (sortedBean instanceof ComponentTypeBeanDetails) {
                 ComponentTypeBeanDetails componentTypeBeanDetails = (ComponentTypeBeanDetails) sortedBean;
                 AbstractComponentHolder<Object> componentHolder = (AbstractComponentHolder<Object>) componentTypeBeanDetails.getComponentHolder();
                 componentHolder.onEnable(sortedBean.getBean());
             }
             if (sortedBean instanceof TypeBeanDetails) {
-                // TODO @PreEnable
+                TypeBeanDetails typeBeanDetails = (TypeBeanDetails) sortedBean;
+                List<MethodBeanDetails> methodDetails = typeBeanDetails.getMethodDetails(BeanDetails.Stage.PRE_ENABLE_CALLED);
+
+                if (methodDetails != null) {
+                    methodDetails.forEach(methodBeanDetails
+                            -> methodBeanDetails.getMethodParameterDetails().invoke(methodBeanDetails.getHolder().getBean(), this));
+                }
             }
+            sortedBean.setStage(BeanDetails.Stage.INITIALIZED);
         }
     }
 
     public void onDisable(SnapWired snapWired) {
         List<BeanDetails> sorted = getSortedBeans(snapWired, BeanDetails.Stage.INITIALIZED);
         Collections.reverse(sorted);
+        final Set<TypeBeanDetails> danglingTypeBeans = new HashSet<>();
         for (BeanDetails sortedBean : sorted) {
-            System.out.println("Disabling bean " + sortedBean.getName());
             if (sortedBean instanceof TypeBeanDetails) {
-                // TODO @PreDestroy
+                TypeBeanDetails typeBeanDetails = (TypeBeanDetails) sortedBean;
+                danglingTypeBeans.add(typeBeanDetails);
+                List<MethodBeanDetails> methodDetails = typeBeanDetails.getMethodDetails(BeanDetails.Stage.INITIALIZED);
+                if (methodDetails != null) {
+                    methodDetails.forEach(methodBeanDetails -> {
+                        methodBeanDetails.getMethodParameterDetails().invoke(methodBeanDetails.getHolder().getBean(), this);
+                    });
+                }
             }
             if (sortedBean instanceof ComponentTypeBeanDetails) {
                 ComponentTypeBeanDetails componentTypeBeanDetails = (ComponentTypeBeanDetails) sortedBean;
                 AbstractComponentHolder<Object> componentHolder = (AbstractComponentHolder<Object>) componentTypeBeanDetails.getComponentHolder();
                 componentHolder.onDisable(sortedBean.getBean());
             }
-            if (sortedBean.getBean() instanceof DisposableBean) {
-                DisposableBean disposableBean = (DisposableBean) sortedBean.getBean();
+            sortedBean.setStage(sortedBean instanceof TypeBeanDetails ? BeanDetails.Stage.PRE_DESTROYED : BeanDetails.Stage.DESTROYED);
+            this.registeredBeans.remove(sortedBean);
+            this.registeredBeansMap.remove(sortedBean.getType());
+        }
+        for (TypeBeanDetails danglingTypeBean : danglingTypeBeans) {
+            List<MethodBeanDetails> methodDetails = danglingTypeBean.getMethodDetails(BeanDetails.Stage.PRE_DESTROYED);
+            if (methodDetails != null) {
+                methodDetails.forEach(methodBeanDetails
+                        -> methodBeanDetails.getMethodParameterDetails().invoke(methodBeanDetails.getHolder().getBean(),
+                        this));
+            }
+            if (danglingTypeBean.getBean() instanceof DisposableBean) {
+                DisposableBean disposableBean = (DisposableBean) danglingTypeBean.getBean();
                 try {
                     disposableBean.destroy();
                 } catch (Exception e) {
-                    log.error("Failed to destroy bean {}", sortedBean.getBean(), e);
+                    log.error("Failed to destroy bean {}", danglingTypeBean, e);
                 }
             }
-            sortedBean.setStage(BeanDetails.Stage.PRE_DESTROYED);
+            danglingTypeBean.setStage(BeanDetails.Stage.DESTROYED);
         }
+    }
+
+    public void unregisterWiredParent(SnapWired snapWired) {
+        this.registeredBeans.removeIf(beanDetails -> beanDetails.getParent() == snapWired);
+        this.registeredBeansMap.entrySet().removeIf(entry -> entry.getValue().getParent() == snapWired);
     }
 }

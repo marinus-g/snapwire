@@ -74,7 +74,6 @@ public class GenericBeanDetails implements BeanDetails {
     public void setBean(@Nullable Object bean) {
         this.instance = bean;
         this.stage = bean == null ? Stage.DESTROYED : Stage.PRE_INITIALIZED;
-
     }
 
     @Override

@@ -28,7 +28,7 @@ class SingleServiceSnapWireTest {
     void testSingleService() {
         Test1Parent parent = new Test1Parent();
         parent.register();
-        parent.preEnableBeans();
+        parent.enableBeans();
         BeanContext context = SnapWire.getInstance().getRootContext();
         Service1 service1 = context.getBean(Service1.class);
         assertThat(service1, notNullValue());

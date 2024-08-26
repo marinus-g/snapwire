@@ -124,7 +124,7 @@ public class BeanContext {
                 if (annotation.equals(Component.class)) {
                     beanDetails = this.registerComponent(reflectLookup, beanClazz);
                 } else if (annotation.equals(Configuration.class)) {
-                    //this.registerConfiguration(reflectLookup, beanClazz);
+                    beanDetails = this.registerConfiguration(reflectLookup, beanClazz);
                 } else if (annotation.equals(Service.class)) {
                     beanDetails = this.registerService(beanClazz);
                 } else {
@@ -172,6 +172,10 @@ public class BeanContext {
             componentTypeBeanDetails.setComponentHolder(this.genericComponentHolder);
         }
         return componentTypeBeanDetails;
+    }
+
+    private TypeBeanDetails registerConfiguration(ReflectLookup reflectLookup, Class<?> configurationClazz) {
+        return new TypeBeanDetails(configurationClazz, this.getConfigurationName(configurationClazz, configurationClazz.getAnnotation(Configuration.class));
     }
 
     /**
@@ -261,6 +265,10 @@ public class BeanContext {
 
     private String getBeanName(Class<?> clazz, Bean bean) {
         return bean.value().isEmpty() ? clazz.getName() : bean.value();
+    }
+
+    private String getConfigurationName(Class<?> clazz, Configuration configuration) {
+        return configuration.value().isEmpty() ? clazz.getName() : configuration.value();
     }
 
     public Collection<BeanDetails> getUninitializedBeans() {

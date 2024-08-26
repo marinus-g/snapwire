@@ -4,6 +4,7 @@ import dev.marinus.snapwire.SnapWired;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Collection;
 import java.util.Set;
 
 public interface BeanDetails {
@@ -40,6 +41,8 @@ public interface BeanDetails {
     boolean hasDependencies();
 
     boolean hasChildren();
+
+    Collection<Class<?>> getSuperTypes();
 
 
     enum Stage {

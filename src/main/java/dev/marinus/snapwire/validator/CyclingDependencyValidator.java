@@ -34,7 +34,6 @@ public class CyclingDependencyValidator implements BeanValidator {
         if (!path.add(beanDetails)) {
             return true;
         }
-        System.out.println("Checking for cycling dependency for bean " + beanDetails);
         for (BeanDetails dependency : beanDetails.getDependencies()) {
             if (hasCyclingDependencies(dependency, path)) {
                 return true;

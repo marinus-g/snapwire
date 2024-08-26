@@ -175,7 +175,7 @@ public class BeanContext {
     }
 
     private TypeBeanDetails registerConfiguration(ReflectLookup reflectLookup, Class<?> configurationClazz) {
-        return new TypeBeanDetails(configurationClazz, this.getConfigurationName(configurationClazz, configurationClazz.getAnnotation(Configuration.class));
+        return new TypeBeanDetails(configurationClazz, this.getConfigurationName(configurationClazz, configurationClazz.getAnnotation(Configuration.class)));
     }
 
     /**

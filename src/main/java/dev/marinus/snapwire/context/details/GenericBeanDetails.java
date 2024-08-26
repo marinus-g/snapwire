@@ -2,8 +2,10 @@ package dev.marinus.snapwire.context.details;
 
 import dev.marinus.snapwire.DisposableBean;
 import dev.marinus.snapwire.SnapWired;
+import dev.marinus.snapwire.reflect.ClassUtils;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Objects;
@@ -21,6 +23,7 @@ public class GenericBeanDetails implements BeanDetails {
 
     private final Set<BeanDetails> children = new HashSet<>();
     private final Set<BeanDetails> dependencies = new HashSet<>();
+    private final Set<Class<?>> superTypes = new HashSet<>();
 
     public GenericBeanDetails(Object instance) {
         this(instance.getClass(), instance.getClass().getSimpleName());
@@ -31,6 +34,8 @@ public class GenericBeanDetails implements BeanDetails {
         this.name = name;
         this.stage = Stage.CREATED;
         this.disposable = DisposableBean.class.isAssignableFrom(type);
+        this.superTypes.addAll(ClassUtils.getSuperClassesAndInterfaces(type));
+        this.superTypes.remove(DisposableBean.class); // Remove the DisposableBean interface, since it´s internal
     }
 
     public GenericBeanDetails(Class<?> type, @Nullable Object instance, String name) {
@@ -120,6 +125,11 @@ public class GenericBeanDetails implements BeanDetails {
     @Override
     public boolean hasChildren() {
         return !this.children.isEmpty();
+    }
+
+    @Override
+    public Collection<Class<?>> getSuperTypes() {
+        return Collections.unmodifiableSet(this.superTypes);
     }
 
     @Override

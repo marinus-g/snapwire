@@ -1,6 +1,7 @@
 package dev.marinus.snapwire.context.details.constructor;
 
 import dev.marinus.snapwire.annotation.BeanConstructor;
+import dev.marinus.snapwire.annotation.Use;
 import dev.marinus.snapwire.context.BeanContext;
 import org.jetbrains.annotations.Nullable;
 
@@ -24,8 +25,21 @@ public class ConstructorBeanParameterDetails extends AbstractBeanParameterDetail
         }
         super.parameters = constructorToUse.getParameters();
         for (Parameter parameter : super.parameters) {
-            if (!beanContext.isBean(parameter.getType())) {
-                throw new IllegalArgumentException(String.format("The type %s is not a bean, it's not supposed to be in bean constructor!", parameter.getType().getName()));
+            if (parameter.isAnnotationPresent(Use.class)) {
+                Use use = parameter.getAnnotation(Use.class);
+                if (!use.name().isEmpty()) {
+                    if (!beanContext.isBean(use.name())) {
+                        throw new IllegalArgumentException("Couldn't find bean " + use.name() + "!");
+                    }
+                } else {
+                    if (!beanContext.isBean(use.type())) {
+                        throw new IllegalArgumentException(String.format("The type %s is not a bean, it's not supposed to be in bean constructor!", use.type().getName()));
+                    }
+                }
+            } else {
+                if (!beanContext.isBean(parameter.getType())) {
+                    throw new IllegalArgumentException(String.format("The type %s is not a bean, it's not supposed to be in bean constructor!", parameter.getType().getName()));
+                }
             }
         }
         constructor =  constructorToUse;

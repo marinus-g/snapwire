@@ -27,6 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -58,7 +59,18 @@ public class BeanContext {
     private final BeanContextInitializer initializer = new BeanContextInitializer(this);
 
     public @Nullable BeanDetails getBeanDetails(Class<?> clazz) {
-        return this.registeredBeansMap.get(clazz);
+        return this.registeredBeans
+                .stream()
+                .filter(beanDetails -> beanDetails.getType().equals(clazz) || clazz.isAssignableFrom(beanDetails.getType()))
+                .findFirst()
+                .orElse(null);
+    }
+
+    public @Nullable BeanDetails getBeanDetails(String name) {
+        return this.registeredBeans.stream()
+                .filter(beanDetails -> beanDetails.getName().equals(name))
+                .findFirst()
+                .orElse(null);
     }
 
     public void registerWiredParent(SnapWired parent, ClassLoader classLoader) {
@@ -89,6 +101,25 @@ public class BeanContext {
     private void registerTypeBeans(SnapWired parent, ReflectLookup reflectLookup) {
         Arrays.stream(BEAN_TYPE_ANNOTATIONS).forEach(annotation -> {
             reflectLookup.getAnnotatedClasses(annotation).forEach(beanClazz -> {
+                if (beanClazz.isInterface()) {
+                    throw new IllegalArgumentException(String.format("Bean cannot be an interface %s", beanClazz));
+                }
+                if (beanClazz.isEnum()) {
+                    throw new IllegalArgumentException(String.format("Bean cannot be an enum %s", beanClazz));
+                }
+
+                if (beanClazz.isAnnotation()) {
+                    throw new IllegalArgumentException(String.format("Bean cannot be an annotation %s", beanClazz));
+                }
+
+                if (beanClazz.isPrimitive()) {
+                    throw new IllegalArgumentException(String.format("Bean cannot be a primitive %s", beanClazz));
+                }
+
+                if (Modifier.isAbstract(beanClazz.getModifiers())) {
+                    throw new IllegalArgumentException(String.format("Bean cannot be abstract %s", beanClazz));
+                }
+
                 TypeBeanDetails beanDetails = null;
                 if (annotation.equals(Component.class)) {
                     beanDetails = this.registerComponent(reflectLookup, beanClazz);
@@ -130,7 +161,6 @@ public class BeanContext {
                 this.getComponentName(componentClazz, component));
         final ComponentHolderValidator validator = new ComponentHolderValidator(componentClazz);
         reflectLookup.getAnnotatedClasses(ComponentHolder.class).forEach(holderClazz -> {
-            System.out.println("found component holder " + holderClazz);
             if (validator.isValid(holderClazz.getAnnotation(ComponentHolder.class))) {
                 final AbstractComponentHolder<?> componentHolder = this.constructComponentHolder(holderClazz);
                 componentTypeBeanDetails.setComponentHolder(componentHolder);
@@ -161,13 +191,28 @@ public class BeanContext {
     }
 
     private TypeBeanDetails registerService(Class<?> genericTypeClazz) {
-        final TypeBeanDetails beanDetails = new ServiceBeanDetails(genericTypeClazz,
+        return new ServiceBeanDetails(genericTypeClazz,
                 this.getServiceName(genericTypeClazz, genericTypeClazz.getAnnotation(Service.class)));
-        return beanDetails;
     }
 
     public <T> T getBean(Class<T> clazz) {
+        if (clazz.isInterface() || Modifier.isAbstract(clazz.getModifiers())) {
+            return this.getBeanFromSuper(clazz);
+        }
         final BeanDetails beanDetails = this.registeredBeansMap.get(clazz);
+        if (beanDetails == null) {
+            throw new IllegalArgumentException("Bean not found");
+        }
+        //noinspection unchecked
+        return (T) beanDetails.getBean();
+    }
+
+    public <T> T getBeanFromSuper(Class<T> clazz) {
+        final BeanDetails beanDetails = this.registeredBeans
+                .stream()
+                .filter(details -> clazz.isAssignableFrom(details.getType()))
+                .findFirst()
+                .orElse(null);
         if (beanDetails == null) {
             throw new IllegalArgumentException("Bean not found");
         }
@@ -184,8 +229,24 @@ public class BeanContext {
                 .getBean();
     }
 
+    public <T> T getBeanFromSuper(String name, Class<T> superClass) {
+        //noinspection unchecked
+        return (T) this.registeredBeans.stream()
+                .filter(beanDetails -> beanDetails.getName().equals(name))
+                .filter(beanDetails -> superClass.isAssignableFrom(beanDetails.getType()))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Bean with name not found"))
+                .getBean();
+    }
+
     public boolean isBean(Class<?> type) {
-        return this.registeredBeansMap.containsKey(type);
+        return this.registeredBeans
+                .stream()
+                .anyMatch(beanDetails -> beanDetails.getType().equals(type) || type.isAssignableFrom(beanDetails.getType()));
+    }
+
+    public boolean isBean(String name) {
+        return this.registeredBeans.stream().anyMatch(beanDetails -> beanDetails.getName().equals(name));
     }
 
     private String getComponentName(Class<?> clazz, Component component) {
@@ -222,13 +283,9 @@ public class BeanContext {
 
     public void onPreEnable(SnapWired snapWired) {
         for (BeanDetails sortedBean : getSortedBeans(snapWired, BeanDetails.Stage.PRE_INITIALIZED)) {
-            System.out.println("Enabling bean " + sortedBean.getName());
             if (sortedBean instanceof ComponentTypeBeanDetails) {
-                System.out.println("Enabling component " + sortedBean.getName());
                 ComponentTypeBeanDetails componentTypeBeanDetails = (ComponentTypeBeanDetails) sortedBean;
-                System.out.println("component onEnable for " + sortedBean);
                 AbstractComponentHolder<Object> componentHolder = (AbstractComponentHolder<Object>) componentTypeBeanDetails.getComponentHolder();
-                System.out.println("component holder onEnable for " + componentHolder);
                 componentHolder.onEnable(sortedBean.getBean());
             }
             if (sortedBean instanceof TypeBeanDetails) {
@@ -240,13 +297,9 @@ public class BeanContext {
 
     public void onEnable(SnapWired snapWired) {
         for (BeanDetails sortedBean : getSortedBeans(snapWired, BeanDetails.Stage.PRE_INITIALIZED)) {
-            System.out.println("Enabling bean " + sortedBean.getName());
             if (sortedBean instanceof ComponentTypeBeanDetails) {
-                System.out.println("Enabling component " + sortedBean.getName());
                 ComponentTypeBeanDetails componentTypeBeanDetails = (ComponentTypeBeanDetails) sortedBean;
-                System.out.println("component onEnable for " + sortedBean);
                 AbstractComponentHolder<Object> componentHolder = (AbstractComponentHolder<Object>) componentTypeBeanDetails.getComponentHolder();
-                System.out.println("component holder onEnable for " + componentHolder);
                 componentHolder.onEnable(sortedBean.getBean());
             }
             if (sortedBean instanceof TypeBeanDetails) {
@@ -264,11 +317,8 @@ public class BeanContext {
                 // TODO @PreDestroy
             }
             if (sortedBean instanceof ComponentTypeBeanDetails) {
-                System.out.println("Disabling component " + sortedBean.getName());
                 ComponentTypeBeanDetails componentTypeBeanDetails = (ComponentTypeBeanDetails) sortedBean;
-                System.out.println("component onDisable for " + sortedBean);
                 AbstractComponentHolder<Object> componentHolder = (AbstractComponentHolder<Object>) componentTypeBeanDetails.getComponentHolder();
-                System.out.println("component holder onDisable for " + componentHolder);
                 componentHolder.onDisable(sortedBean.getBean());
             }
             if (sortedBean.getBean() instanceof DisposableBean) {

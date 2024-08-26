@@ -26,9 +26,7 @@ public class BeanContextInitializer {
             this.queryDependencies(beanDetails);
         });
         for (BeanDetails uninitializedBean : uninitializedBeans) {
-            System.out.println("Checking for cycling dependency for bean " + uninitializedBean.getName());
             if (!this.cyclingDependencyValidator.isValid(uninitializedBean)) {
-                System.out.println("Cycling dependency detected for bean " + uninitializedBean.getName());
                 throw new IllegalArgumentException("Cycling dependency detected for bean " + uninitializedBean.getName());
             }
         }
@@ -43,7 +41,6 @@ public class BeanContextInitializer {
             return;
         }
         if (!details.getDependencies().isEmpty()) {
-            System.out.println("details for " + details.getName() + " has dependencies");
             details.getDependencies().forEach(this::initializeBean);
         }
         details.getDependencies().forEach(beanDetails -> beanDetails.addChildren(details));

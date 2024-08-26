@@ -25,7 +25,7 @@ class BeansSnapWireTest {
     void testBeans() {
         Test3Parent parent = new Test3Parent();
         parent.register();
-        parent.preEnableBeans();
+        parent.enableBeans();
         BeanContext context = SnapWire.getInstance().getRootContext();
         dev.marinus.snapwire.service.test3.service.Service2 service2 = context.getBean(dev.marinus.snapwire.service.test3.service.Service2.class);
         assertThat(service2, Matchers.notNullValue());

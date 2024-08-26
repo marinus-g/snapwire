@@ -3,8 +3,8 @@ package dev.marinus.snapwire;
 import dev.marinus.snapwire.annotation.WiredPackages;
 import dev.marinus.snapwire.context.BeanContext;
 import lombok.Getter;
+import org.jetbrains.annotations.Nullable;
 
-import javax.annotation.Nullable;
 
 public class SnapWire {
 
@@ -25,7 +25,6 @@ public class SnapWire {
     }
 
     public void register(Class<? extends SnapWired> clazz, SnapWired parent) {
-
         this.register(clazz, clazz.getClassLoader(), parent, null);
     }
 
@@ -42,16 +41,12 @@ public class SnapWire {
         context.registerWiredParent(parent, classLoader);
     }
 
-    public void unregister(Class<? extends SnapWired> clazz, boolean disable) {
-
-    }
-
-    public void onPreEnable(SnapWired snapWired, @Nullable BeanContext context) {
+    public void unregister(SnapWired snapWired, @Nullable BeanContext context) {
         if (context == null) {
             context = this.rootContext;
         }
-        context.onPreEnable(snapWired);
-
+        onDisable(snapWired, context);
+        context.unregisterWiredParent(snapWired);
     }
 
     public void onDisable(SnapWired snapWired, @Nullable BeanContext context) {

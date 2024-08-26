@@ -48,6 +48,7 @@ public interface BeanDetails {
     enum Stage {
         CREATED,
         PRE_INITIALIZED,
+        PRE_ENABLE_CALLED,
         INITIALIZED,
         PRE_DESTROYED,
         DESTROYED

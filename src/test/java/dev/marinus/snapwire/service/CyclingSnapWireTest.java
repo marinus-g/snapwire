@@ -26,7 +26,7 @@ class CyclingSnapWireTest {
         boolean exceptionThrown = false;
         try {
             parent.register();
-            parent.preEnableBeans();
+            parent.enableBeans();
         } catch (IllegalArgumentException e) {
             exceptionThrown = true;
         }

@@ -28,7 +28,7 @@ class DependentSnapWireTest {
     void testDependentService() {
         Test2Parent parent = new Test2Parent();
         parent.register();
-        parent.preEnableBeans();
+        parent.enableBeans();
         BeanContext context = SnapWire.getInstance().getRootContext();
         assertThat(context.getRegisteredBeans(), Matchers.hasSize(3));
         assertThat(context.getBean(Service1.class), Matchers.notNullValue());

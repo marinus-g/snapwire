@@ -1,5 +1,6 @@
 package dev.marinus.snapwire.context.details.constructor;
 
+import dev.marinus.snapwire.annotation.Use;
 import dev.marinus.snapwire.context.BeanContext;
 
 import java.lang.reflect.Method;
@@ -17,8 +18,18 @@ public class MethodConstructorBeanParameterDetails extends AbstractBeanParameter
     public void load() {
         this.parameters = this.method.getParameters();
         for (Parameter parameter : this.parameters) {
-            if (!beanContext.isBean(parameter.getType())) {
-                throw new IllegalArgumentException(String.format("The type %s is not a bean, it's not supposed to be in bean method!", parameter.getType().getName()));
+            if (parameter.getType().isPrimitive()) {
+                throw new IllegalArgumentException(String.format("The type %s is a primitive, it's not supposed to be in bean method!", parameter.getType().getName()));
+            }
+            // ugly, rewrite this
+            if (parameter.isAnnotationPresent(Use.class)) {
+                if (!beanContext.isBean(parameter.getAnnotation(Use.class).name())) {
+                    throw new IllegalArgumentException(String.format("The bean %s is not registered, it's not supposed to be in bean method!", parameter.getAnnotation(Use.class).name()));
+                }
+            } else {
+                if (!beanContext.isBean(parameter.getType())) {
+                    throw new IllegalArgumentException(String.format("The type %s is not a bean, it's not supposed to be in bean method!", parameter.getType().getName()));
+                }
             }
         }
     }

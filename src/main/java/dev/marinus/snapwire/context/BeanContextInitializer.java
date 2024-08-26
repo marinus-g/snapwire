@@ -33,6 +33,8 @@ public class BeanContextInitializer {
         uninitializedBeans.stream()
                 .filter(details -> !isInitialized(details))
                 .forEach(this::initializeBean);
+        final BeanContextAutowireInjector injector = new BeanContextAutowireInjector(beanContext);
+        injector.inject();
     }
 
 

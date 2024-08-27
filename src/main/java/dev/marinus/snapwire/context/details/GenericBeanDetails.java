@@ -27,6 +27,7 @@ public class GenericBeanDetails implements BeanDetails {
 
     public GenericBeanDetails(Object instance) {
         this(instance.getClass(), instance.getClass().getSimpleName());
+        setBean(instance);
     }
 
     public GenericBeanDetails(Class<?> type, String name) {

@@ -33,6 +33,7 @@ public class BeanContextInitializer {
         uninitializedBeans.stream()
                 .filter(details -> !isInitialized(details))
                 .forEach(this::initializeBean);
+        uninitializedBeans.forEach(beanContext::onPreEnable);
         final BeanContextAutowireInjector injector = new BeanContextAutowireInjector(beanContext);
         injector.inject();
     }
@@ -59,11 +60,10 @@ public class BeanContextInitializer {
             Object bean = methodBeanDetails.getMethodParameterDetails().invoke(methodBeanDetails.getHolder().getBean(), beanContext);
             details.setBean(bean);
         }
-        beanContext.onPreEnable(details);
     }
 
     private boolean isInitialized(BeanDetails details) {
-        return details.getStage() == BeanDetails.Stage.PRE_INITIALIZED;
+        return details.getStage() == BeanDetails.Stage.PRE_INITIALIZED || details.getStage() == BeanDetails.Stage.PRE_ENABLE_CALLED;
     }
 
     private void queryDependencies(BeanDetails details) {

@@ -292,11 +292,6 @@ public class BeanContext {
     }
 
     public void onPreEnable(BeanDetails bean) {
-        if (bean instanceof ComponentTypeBeanDetails) {
-            ComponentTypeBeanDetails componentTypeBeanDetails = (ComponentTypeBeanDetails) bean;
-            AbstractComponentHolder<Object> componentHolder = (AbstractComponentHolder<Object>) componentTypeBeanDetails.getComponentHolder();
-            componentHolder.onEnable(bean.getBean());
-        }
         if (bean instanceof TypeBeanDetails) {
             TypeBeanDetails typeBeanDetails = (TypeBeanDetails) bean;
             List<MethodBeanDetails> methodDetails = typeBeanDetails.getMethodDetails(BeanDetails.Stage.PRE_INITIALIZED);

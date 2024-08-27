@@ -2,11 +2,11 @@ package dev.marinus.snapwire.service.enabledisable1.service;
 
 import dev.marinus.snapwire.annotation.PostDestroy;
 import dev.marinus.snapwire.annotation.PostEnable;
+import dev.marinus.snapwire.annotation.PreDestroy;
 import dev.marinus.snapwire.annotation.PreEnable;
 import dev.marinus.snapwire.annotation.Service;
 import lombok.Getter;
 
-import javax.annotation.PreDestroy;
 
 @Service
 @Getter

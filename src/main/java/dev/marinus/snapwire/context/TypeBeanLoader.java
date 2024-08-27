@@ -2,6 +2,7 @@ package dev.marinus.snapwire.context;
 
 import dev.marinus.snapwire.annotation.PostDestroy;
 import dev.marinus.snapwire.annotation.PostEnable;
+import dev.marinus.snapwire.annotation.PreDestroy;
 import dev.marinus.snapwire.annotation.PreEnable;
 import dev.marinus.snapwire.context.details.BeanDetails;
 import dev.marinus.snapwire.context.details.MethodBeanDetails;
@@ -10,7 +11,6 @@ import dev.marinus.snapwire.context.details.constructor.MethodConstructorBeanPar
 import lombok.Data;
 
 import javax.annotation.Nullable;
-import javax.annotation.PreDestroy;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Arrays;

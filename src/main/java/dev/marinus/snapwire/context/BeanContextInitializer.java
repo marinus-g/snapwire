@@ -46,6 +46,10 @@ public class BeanContextInitializer {
             details.getDependencies().forEach(this::initializeBean);
         }
         details.getDependencies().forEach(beanDetails -> beanDetails.addChildren(details));
+        if (details.getStage() == BeanDetails.Stage.PRE_INITIALIZED) { // bean already initialized
+            return;
+        }
+        log.info("Initializing bean {}", details.getType().getName());
         if (details instanceof TypeBeanDetails) {
             TypeBeanDetails typeBeanDetails = (TypeBeanDetails) details;
             Object bean = typeBeanDetails.getConstructorDetails().newInstance();
